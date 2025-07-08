@@ -1,0 +1,84 @@
+# 大六壬起课应用开发规范 (Da Liu Ren Divination App Development Rules)
+
+## 项目概述 (Project Overview)
+本项目旨在开发一个传统的大六壬起课应用，保持文化准确性和传统美学。
+
+## 开发规范 (Development Standards)
+
+### 代码规范 (Code Standards)
+- 使用 TypeScript 进行严格类型检查
+- 遵循 React 最佳实践和 hooks 模式
+- 组件命名采用 PascalCase，文件名使用 kebab-case
+- 所有函数和变量使用有意义的中英文混合命名
+- 保持代码整洁，单个函数不超过 50 行
+
+### 文化准确性 (Cultural Accuracy)
+- 严格按照传统大六壬理论实现算法
+- 天干地支、十二神将等传统元素必须准确无误
+- 术语翻译保持传统性和准确性
+- 界面设计体现中国传统文化美学
+
+### 文档维护 (Documentation Maintenance)
+- 每个新功能必须更新相应文档
+- 保持 README.md、API 文档和用户指南同步
+- 记录所有重要的设计决策和算法实现
+- 维护详细的变更日志 (CHANGELOG.md)
+
+### UI/UX 设计原则 (UI/UX Design Principles)
+- 采用传统中国色彩：朱红(#DC143C)、墨黑(#2F2F2F)、金黄(#FFD700)、青色(#20B2AA)
+- 使用传统圆盘布局展示天地人神四盘
+- 界面简洁优雅，避免现代化过度设计
+- 支持响应式设计，确保移动端体验
+
+### 测试要求 (Testing Requirements)
+- 核心算法必须有单元测试覆盖
+- 重要组件需要集成测试
+- 手动测试传统历法转换的准确性
+- 验证不同时间点的起课结果
+
+### 提交规范 (Commit Standards)
+- 提交信息使用中英文混合格式
+- 格式：[类型] 简短描述 (详细说明)
+- 类型：feat(功能), fix(修复), docs(文档), style(样式), refactor(重构)
+- 每次提交前必须更新相关文档
+
+### 性能要求 (Performance Requirements)
+- 起课计算响应时间 < 100ms
+- 界面渲染流畅，无明显卡顿
+- 优化传统图形元素的加载速度
+- 合理使用缓存机制
+
+### 安全考虑 (Security Considerations)
+- 输入验证和数据清理
+- 防止 XSS 攻击
+- 安全的本地存储实现
+
+## 项目结构 (Project Structure)
+```
+src/
+├── components/          # React 组件
+│   ├── plates/         # 盘面组件 (天地人神)
+│   ├── forms/          # 表单组件
+│   └── common/         # 通用组件
+├── utils/              # 工具函数
+│   ├── calendar/       # 历法转换
+│   ├── calculation/    # 起课算法
+│   └── constants/      # 常量定义
+├── types/              # TypeScript 类型定义
+├── styles/             # 样式文件
+└── hooks/              # 自定义 hooks
+```
+
+## 开发流程 (Development Workflow)
+1. 功能设计和文档编写
+2. 类型定义和接口设计
+3. 核心算法实现和测试
+4. UI 组件开发
+5. 集成测试和调试
+6. 文档更新和代码审查
+
+## 维护责任 (Maintenance Responsibilities)
+- 及时更新项目文档
+- 保持代码质量和文化准确性
+- 响应用户反馈和问题修复
+- 定期检查和优化性能
