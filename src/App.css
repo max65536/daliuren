@@ -1,52 +1,38 @@
 /**
- * 大六壬应用样式
- * Da Liu Ren App Styles
+ * 大六壬应用样式 - 现代风格
+ * Da Liu Ren App Styles - Modern Design
  */
 
 .app {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  background: var(--bg-primary);
 }
 
 /* 头部样式 */
 .app-header {
-  background: linear-gradient(135deg, var(--color-primary) 0%, #B91C3C 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-cyan) 100%);
   color: var(--text-inverse);
   padding: var(--spacing-xl) var(--spacing-lg);
   text-align: center;
-  box-shadow: 0 4px 12px var(--shadow-medium);
-  position: relative;
-}
-
-.app-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,215,0,0.3)"/></svg>') repeat;
-  opacity: 0.1;
+  box-shadow: 0 4px 20px var(--shadow-medium);
+  backdrop-filter: blur(10px);
 }
 
 .app-header h1 {
   font-family: var(--font-secondary);
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: 700;
   margin: 0;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  position: relative;
-  z-index: 1;
+  letter-spacing: -0.025em;
 }
 
 .subtitle {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   margin: var(--spacing-sm) 0 0 0;
   opacity: 0.9;
-  position: relative;
-  z-index: 1;
+  font-weight: 400;
 }
 
 /* 主要内容区域 */
@@ -302,6 +288,18 @@
   font-weight: 500;
 }
 
+/* 盘面可视化 */
+.plates-visualization {
+  margin-bottom: var(--spacing-xl);
+}
+
+.plates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+}
+
 /* 盘面信息 */
 .plate-info {
   background: var(--bg-secondary);
@@ -372,6 +370,11 @@
     grid-template-columns: 1fr;
   }
   
+  .plates-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+  }
+  
   .plate-summary {
     grid-template-columns: 1fr;
   }
@@ -399,6 +402,11 @@
   .current-time,
   .divination-result {
     padding: var(--spacing-lg);
+  }
+  
+  .plates-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
   }
   
   .confidence-bar {

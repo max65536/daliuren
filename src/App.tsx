@@ -3,6 +3,8 @@ import './App.css';
 import { generateDivinationResult } from './utils/calculation/plate-calculation';
 import { getCurrentChineseDateTime, formatChineseDateTime } from './utils/calendar/lunar-calendar';
 import type { DivinationRequest, DivinationResult } from './types/divination';
+import HeavenEarthPlate from './components/plates/heaven-earth-plate';
+import FourLessons from './components/plates/four-lessons';
 
 function App() {
   const [result, setResult] = useState<DivinationResult | null>(null);
@@ -149,6 +151,20 @@ function App() {
                   </ul>
                 </div>
               )}
+            </div>
+
+            {/* 盘面可视化 */}
+            <div className="plates-visualization">
+              <div className="plates-grid">
+                <HeavenEarthPlate 
+                  tianPan={result.pan.tianPan}
+                  diPan={result.pan.diPan}
+                />
+                <FourLessons 
+                  siKe={result.pan.renPan.siKe}
+                  sanChuan={result.pan.renPan.sanChuan}
+                />
+              </div>
             </div>
 
             <div className="plate-info">

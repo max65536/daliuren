@@ -1,0 +1,422 @@
+/**
+ * 盘面组件样式
+ * Plates Components Styles
+ */
+
+/* 天地盘样式 */
+.heaven-earth-plate {
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: 0 4px 12px var(--shadow-light);
+  border: 1px solid var(--border-secondary);
+}
+
+.heaven-earth-plate h3 {
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.plate-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.plate-svg {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+}
+
+.outer-circle,
+.inner-circle {
+  transition: stroke var(--transition-normal);
+}
+
+.zhi-text,
+.gan-text {
+  font-family: var(--font-secondary);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.direction-text {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.plate-legend {
+  display: flex;
+  gap: var(--spacing-lg);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-primary);
+}
+
+/* 四课三传样式 */
+.four-lessons {
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: 0 4px 12px var(--shadow-light);
+  border: 1px solid var(--border-secondary);
+}
+
+.four-lessons h3 {
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.four-lessons h4 {
+  margin-bottom: var(--spacing-md);
+  color: var(--text-primary);
+  font-weight: 600;
+  border-bottom: 2px solid var(--color-accent);
+  padding-bottom: var(--spacing-sm);
+}
+
+/* 四课部分 */
+.lessons-section {
+  margin-bottom: var(--spacing-xl);
+}
+
+.lessons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.lesson-card {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  border: 2px solid var(--border-secondary);
+  transition: all var(--transition-normal);
+}
+
+.lesson-card:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--shadow-medium);
+}
+
+.lesson-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.lesson-name {
+  font-weight: 600;
+  color: var(--color-primary);
+  font-size: 1.1rem;
+}
+
+.lesson-position {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+}
+
+.lesson-content {
+  text-align: center;
+}
+
+.ganzhi-pair {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.gan,
+.zhi {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.gan {
+  background: var(--color-accent);
+  color: var(--text-inverse);
+}
+
+.zhi {
+  background: var(--color-primary);
+  color: var(--text-inverse);
+}
+
+.spirit-info {
+  margin-top: var(--spacing-sm);
+}
+
+.spirit-name {
+  display: inline-block;
+  background: var(--color-cyan);
+  color: var(--text-inverse);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* 三传部分 */
+.transmissions-section {
+  margin-bottom: var(--spacing-xl);
+}
+
+.transmissions-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.transmission-card {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  border: 2px solid var(--color-primary);
+  min-width: 180px;
+  text-align: center;
+  transition: all var(--transition-normal);
+}
+
+.transmission-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px var(--shadow-medium);
+}
+
+.transmission-header {
+  margin-bottom: var(--spacing-md);
+}
+
+.transmission-name {
+  font-weight: 600;
+  color: var(--color-primary);
+  font-size: 1.2rem;
+}
+
+.transmission-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.transmission-zhi {
+  margin-bottom: var(--spacing-sm);
+}
+
+.zhi-large {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: var(--color-primary);
+  color: var(--text-inverse);
+  border-radius: var(--radius-full);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.transmission-spirit .spirit-name {
+  background: var(--color-accent);
+  font-size: 1rem;
+}
+
+.transmission-meaning {
+  margin-top: var(--spacing-sm);
+}
+
+.meaning-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  display: block;
+}
+
+.transmission-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+}
+
+/* 四课统计 */
+.lessons-stats {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  border: 1px solid var(--border-secondary);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--spacing-md);
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-secondary);
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.stat-value {
+  font-weight: 600;
+  color: var(--color-primary);
+  font-size: 1.1rem;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .lessons-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .transmissions-flow {
+    flex-direction: column;
+  }
+  
+  .transmission-arrow {
+    transform: rotate(90deg);
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .plate-legend {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .transmission-card {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .plate-svg {
+    max-width: 300px;
+  }
+  
+  .zhi-text,
+  .gan-text {
+    font-size: 10px;
+  }
+  
+  .direction-text {
+    font-size: 12px;
+  }
+}
+
+/* 动画效果 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lesson-card,
+.transmission-card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.lesson-card:nth-child(1) { animation-delay: 0.1s; }
+.lesson-card:nth-child(2) { animation-delay: 0.2s; }
+.lesson-card:nth-child(3) { animation-delay: 0.3s; }
+.lesson-card:nth-child(4) { animation-delay: 0.4s; }
+
+.transmission-card:nth-child(1) { animation-delay: 0.1s; }
+.transmission-card:nth-child(3) { animation-delay: 0.2s; }
+.transmission-card:nth-child(5) { animation-delay: 0.3s; }
+
+/* 特殊状态样式 */
+.lesson-card.active {
+  border-color: var(--color-accent);
+  background: linear-gradient(135deg, var(--bg-surface) 0%, var(--color-accent)10 100%);
+}
+
+.transmission-card.highlighted {
+  border-color: var(--color-cyan);
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+}
+
+/* 工具提示样式 */
+.tooltip {
+  position: relative;
+  cursor: help;
+}
+
+.tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-secondary);
+  color: var(--text-inverse);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-normal);
+  z-index: var(--z-tooltip);
+}
+
+.tooltip:hover::after {
+  opacity: 1;
+}

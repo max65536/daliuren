@@ -12,46 +12,46 @@
 
 /* 根元素 */
 :root {
-  /* 传统中国色彩 */
-  --color-primary: #DC143C;        /* 朱红 */
-  --color-secondary: #2F2F2F;      /* 墨黑 */
-  --color-accent: #FFD700;         /* 金黄 */
-  --color-cyan: #20B2AA;           /* 青色 */
-  --color-blue: #4169E1;           /* 天蓝 */
+  /* 现代色彩系统 */
+  --color-primary: #3B82F6;        /* 蓝色 */
+  --color-secondary: #1F2937;      /* 深灰 */
+  --color-accent: #10B981;         /* 绿色 */
+  --color-cyan: #06B6D4;           /* 青色 */
+  --color-purple: #8B5CF6;         /* 紫色 */
   
   /* 背景色 */
-  --bg-primary: #FFFEF7;           /* 米白 */
-  --bg-secondary: #F8F8F8;         /* 浅灰 */
+  --bg-primary: #F9FAFB;           /* 浅灰白 */
+  --bg-secondary: #F3F4F6;         /* 灰白 */
   --bg-surface: #FFFFFF;           /* 纯白 */
-  --bg-overlay: rgba(47, 47, 47, 0.8); /* 遮罩 */
+  --bg-overlay: rgba(31, 41, 55, 0.8); /* 遮罩 */
   
   /* 文字颜色 */
-  --text-primary: #2F2F2F;         /* 主要文字 */
-  --text-secondary: #808080;       /* 次要文字 */
-  --text-accent: #DC143C;          /* 强调文字 */
+  --text-primary: #111827;         /* 主要文字 */
+  --text-secondary: #6B7280;       /* 次要文字 */
+  --text-accent: #3B82F6;          /* 强调文字 */
   --text-inverse: #FFFFFF;         /* 反色文字 */
-  --text-disabled: #708090;        /* 禁用文字 */
+  --text-disabled: #9CA3AF;        /* 禁用文字 */
   
   /* 边框颜色 */
-  --border-primary: #808080;       /* 主要边框 */
-  --border-secondary: #C0C0C0;     /* 次要边框 */
-  --border-accent: #DC143C;        /* 强调边框 */
-  --border-focus: #FFD700;         /* 焦点边框 */
+  --border-primary: #D1D5DB;       /* 主要边框 */
+  --border-secondary: #E5E7EB;     /* 次要边框 */
+  --border-accent: #3B82F6;        /* 强调边框 */
+  --border-focus: #10B981;         /* 焦点边框 */
   
   /* 状态颜色 */
-  --status-success: #20B2AA;       /* 成功 */
-  --status-warning: #FFA500;       /* 警告 */
-  --status-error: #DC143C;         /* 错误 */
-  --status-info: #4169E1;          /* 信息 */
+  --status-success: #10B981;       /* 成功 */
+  --status-warning: #F59E0B;       /* 警告 */
+  --status-error: #EF4444;         /* 错误 */
+  --status-info: #3B82F6;          /* 信息 */
   
   /* 阴影 */
-  --shadow-light: rgba(0, 0, 0, 0.1);
-  --shadow-medium: rgba(0, 0, 0, 0.2);
-  --shadow-heavy: rgba(0, 0, 0, 0.3);
+  --shadow-light: rgba(0, 0, 0, 0.05);
+  --shadow-medium: rgba(0, 0, 0, 0.1);
+  --shadow-heavy: rgba(0, 0, 0, 0.15);
   
   /* 字体 */
-  --font-primary: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', 'SimSun', '宋体', sans-serif;
-  --font-secondary: 'Kaiti SC', '楷体', 'STKaiti', serif;
+  --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  --font-secondary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
   
   /* 间距 */
