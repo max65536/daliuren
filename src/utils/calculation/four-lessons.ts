@@ -682,3 +682,284 @@ export function generateKeAnalysisReport(
     recommendations
   };
 }
+
+// ==================== 统一调用接口 ====================
+
+/**
+ * 四柱信息接口
+ */
+export interface SiZhu {
+  year: GanZhi;   // 年柱
+  month: GanZhi;  // 月柱
+  day: GanZhi;    // 日柱
+  hour: GanZhi;   // 时柱
+}
+
+/**
+ * 大六壬起课统一接口
+ * 输入四柱和月将，输出完整的天地盘、四课、三传字符串格式
+ */
+export function calculateDaLiuRenComplete(
+  siZhu: SiZhu,
+  yueJiang: DiZhi, // 月将（贵人位置）
+  hour: number = 12 // 具体小时，用于判断昼夜贵人
+): {
+  tianDiPan: string;
+  siKe: string;
+  sanChuan: string;
+  analysis: string;
+  raw: {
+    siKe: SiKe;
+    sanChuan: SanChuan;
+    shenJiangPositions: Record<DiZhi, ShenJiang>;
+  };
+} {
+  const { day, hour: hourGanZhi } = siZhu;
+  
+  // 计算神将位置（使用传入的月将作为贵人位置）
+  const shenJiangPositions = calculateShenJiangPositions(yueJiang, true);
+  
+  // 计算四课
+  const siKe = calculateSiKe(day, hourGanZhi, hour);
+  
+  // 计算三传
+  const sanChuan = calculateSanChuan(siKe);
+  
+  // 生成字符串格式输出
+  const tianDiPan = formatTianDiPan(siZhu, shenJiangPositions);
+  const siKeStr = formatSiKe(siKe);
+  const sanChuanStr = formatSanChuan(sanChuan);
+  const analysis = formatAnalysis(siKe, sanChuan);
+  
+  return {
+    tianDiPan,
+    siKe: siKeStr,
+    sanChuan: sanChuanStr,
+    analysis,
+    raw: {
+      siKe,
+      sanChuan,
+      shenJiangPositions
+    }
+  };
+}
+
+/**
+ * 格式化天地盘为字符串
+ */
+function formatTianDiPan(siZhu: SiZhu, shenJiangPositions: Record<DiZhi, ShenJiang>): string {
+  const { year, month, day, hour } = siZhu;
+  
+  let result = '=== 大六壬天地盘 ===\n\n';
+  
+  // 四柱信息
+  result += '【四柱】\n';
+  result += `年柱：${year.gan}${year.zhi}  月柱：${month.gan}${month.zhi}  日柱：${day.gan}${day.zhi}  时柱：${hour.gan}${hour.zhi}\n\n`;
+  
+  // 天盘（固定天干）
+  result += '【天盘】\n';
+  const tianGanOrder = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'] as TianGan[];
+  const dayGanIndex = tianGanOrder.indexOf(day.gan);
+  
+  result += '    巳  午  未\n';
+  result += '辰            申\n';
+  result += '卯            酉\n';
+  result += '    寅  丑  子  戌\n\n';
+  
+  // 地盘（十二地支固定位置）
+  result += '【地盘】\n';
+  result += '    巳  午  未\n';
+  result += '辰            申\n';
+  result += '卯            酉\n';
+  result += '    寅  丑  子  戌\n\n';
+  
+  // 神盘（十二神将）
+  result += '【神盘】\n';
+  const zhiOrder: DiZhi[] = ['巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑', '寅', '卯', '辰'];
+  
+  // 上排：巳午未
+  result += '  ';
+  for (const zhi of ['巳', '午', '未'] as DiZhi[]) {
+    const shen = shenJiangPositions[zhi];
+    result += `${shen.slice(0, 2).padEnd(4)}`;
+  }
+  result += '\n';
+  
+  // 中排：辰和申
+  const chenShen = shenJiangPositions['辰'];
+  const shenShen = shenJiangPositions['申'];
+  result += `${chenShen.slice(0, 2).padEnd(6)}        ${shenShen.slice(0, 2)}\n`;
+  
+  // 中排：卯和酉
+  const maoShen = shenJiangPositions['卯'];
+  const youShen = shenJiangPositions['酉'];
+  result += `${maoShen.slice(0, 2).padEnd(6)}        ${youShen.slice(0, 2)}\n`;
+  
+  // 下排：寅丑子戌
+  result += '  ';
+  for (const zhi of ['寅', '丑', '子', '戌'] as DiZhi[]) {
+    const shen = shenJiangPositions[zhi];
+    result += `${shen.slice(0, 2).padEnd(4)}`;
+  }
+  result += '\n\n';
+  
+  return result;
+}
+
+/**
+ * 格式化四课为字符串
+ */
+function formatSiKe(siKe: SiKe): string {
+  let result = '=== 四课 ===\n\n';
+  
+  const keArray = [
+    { name: '一课', ke: siKe.first },
+    { name: '二课', ke: siKe.second },
+    { name: '三课', ke: siKe.third },
+    { name: '四课', ke: siKe.fourth }
+  ];
+  
+  for (const { name, ke } of keArray) {
+    result += `${name}：${ke.gan}${ke.zhi} - ${ke.shen}\n`;
+  }
+  
+  result += `\n课式：${getTraditionalKeShiName(siKe)}\n\n`;
+  
+  return result;
+}
+
+/**
+ * 格式化三传为字符串
+ */
+function formatSanChuan(sanChuan: SanChuan): string {
+  let result = '=== 三传 ===\n\n';
+  
+  result += `初传：${sanChuan.chu.zhi} - ${sanChuan.chu.shen}\n`;
+  result += `中传：${sanChuan.zhong.zhi} - ${sanChuan.zhong.shen}\n`;
+  result += `末传：${sanChuan.mo.zhi} - ${sanChuan.mo.shen}\n\n`;
+  
+  result += '【传意】\n';
+  result += `初传：${sanChuan.chu.meaning}\n`;
+  result += `中传：${sanChuan.zhong.meaning}\n`;
+  result += `末传：${sanChuan.mo.meaning}\n\n`;
+  
+  return result;
+}
+
+/**
+ * 格式化分析为字符串
+ */
+function formatAnalysis(siKe: SiKe, sanChuan: SanChuan): string {
+  const report = generateKeAnalysisReport(siKe, sanChuan);
+  
+  let result = '=== 分析解读 ===\n\n';
+  
+  result += `【总体判断】\n${report.summary}\n\n`;
+  
+  result += '【四课分析】\n';
+  const keArray = [siKe.first, siKe.second, siKe.third, siKe.fourth];
+  keArray.forEach((ke, index) => {
+    const analysis = report.keAnalysis[index];
+    result += `${['一', '二', '三', '四'][index]}课：${ke.shen}(${analysis.wuXing}${analysis.yinYang}) - ${analysis.nature === '吉' ? '吉神' : '凶神'}\n`;
+  });
+  
+  result += `\n【三传流向】\n${report.chuanFlow.description}\n\n`;
+  
+  if (report.recommendations.length > 0) {
+    result += '【建议】\n';
+    report.recommendations.forEach(rec => {
+      result += `• ${rec}\n`;
+    });
+    result += '\n';
+  }
+  
+  if (report.validation.warnings.length > 0) {
+    result += '【注意】\n';
+    report.validation.warnings.forEach(warning => {
+      result += `• ${warning}\n`;
+    });
+    result += '\n';
+  }
+  
+  return result;
+}
+
+/**
+ * 简化版调用接口 - 只需要日柱、时柱和月将
+ */
+export function quickCalculate(
+  dayGanZhi: GanZhi,
+  hourGanZhi: GanZhi,
+  yueJiang: DiZhi,
+  hour: number = 12
+): string {
+  // 构造简化的四柱（年月柱使用日柱代替）
+  const siZhu: SiZhu = {
+    year: dayGanZhi,
+    month: dayGanZhi,
+    day: dayGanZhi,
+    hour: hourGanZhi
+  };
+  
+  const result = calculateDaLiuRenComplete(siZhu, yueJiang, hour);
+  
+  return `${result.tianDiPan}${result.siKe}${result.sanChuan}${result.analysis}`;
+}
+
+/**
+ * 从字符串解析干支
+ */
+export function parseGanZhi(ganZhiStr: string): GanZhi {
+  if (ganZhiStr.length !== 2) {
+    throw new Error('干支字符串格式错误，应为两个字符');
+  }
+  
+  const gan = ganZhiStr[0] as TianGan;
+  const zhi = ganZhiStr[1] as DiZhi;
+  
+  if (!TIAN_GAN.includes(gan)) {
+    throw new Error(`无效的天干：${gan}`);
+  }
+  
+  if (!DI_ZHI.includes(zhi)) {
+    throw new Error(`无效的地支：${zhi}`);
+  }
+  
+  // 计算在六十甲子中的位置
+  const ganIndex = TIAN_GAN.indexOf(gan);
+  const zhiIndex = DI_ZHI.indexOf(zhi);
+  
+  let index = 1;
+  for (let i = 0; i < 60; i++) {
+    if (i % 10 === ganIndex && i % 12 === zhiIndex) {
+      index = i + 1;
+      break;
+    }
+  }
+  
+  return { gan, zhi, index };
+}
+
+/**
+ * 便捷调用接口 - 使用字符串参数
+ */
+export function calculateFromStrings(
+  dayGanZhi: string,
+  hourGanZhi: string,
+  yueJiang: string,
+  hour: number = 12
+): string {
+  try {
+    const day = parseGanZhi(dayGanZhi);
+    const hourGZ = parseGanZhi(hourGanZhi);
+    const yueJiangZhi = yueJiang as DiZhi;
+    
+    if (!DI_ZHI.includes(yueJiangZhi)) {
+      throw new Error(`无效的月将：${yueJiang}`);
+    }
+    
+    return quickCalculate(day, hourGZ, yueJiangZhi, hour);
+  } catch (error) {
+    return `错误：${error instanceof Error ? error.message : '未知错误'}`;
+  }
+}
