@@ -156,6 +156,17 @@ function getGanCorrespondingZhi(gan: TianGan): DiZhi {
  * 发三传 - 从四课中提取三传
  */
 export function calculateSanChuan(siKe: SiKe): SanChuan {
+  // 首先检查是否为伏吟或反吟
+  const fuYinResult = checkFuYin(siKe);
+  if (fuYinResult) {
+    return calculateFuYinSanChuan(siKe, fuYinResult);
+  }
+  
+  const fanYinResult = checkFanYin(siKe);
+  if (fanYinResult) {
+    return calculateFanYinSanChuan(siKe, fanYinResult);
+  }
+  
   // 检查四课中的重复情况
   const keArray = [siKe.first, siKe.second, siKe.third, siKe.fourth];
   const uniqueKe = getUniqueKe(keArray);
@@ -560,6 +571,12 @@ export function validateSiKe(siKe: SiKe): {
  * 获取传统课式名称
  */
 export function getTraditionalKeShiName(siKe: SiKe): string {
+  // 首先检查是否为伏吟或反吟
+  const specialType = getSpecialKeShiType(siKe);
+  if (specialType) {
+    return specialType;
+  }
+  
   const keArray = [siKe.first, siKe.second, siKe.third, siKe.fourth];
   const uniqueKe = getUniqueKe(keArray);
   
@@ -851,10 +868,30 @@ function formatSanChuan(sanChuan: SanChuan): string {
  */
 function formatAnalysis(siKe: SiKe, sanChuan: SanChuan): string {
   const report = generateKeAnalysisReport(siKe, sanChuan);
+  const fuYinFanYinAnalysis = analyzeFuYinFanYin(siKe);
   
   let result = '=== 分析解读 ===\n\n';
   
   result += `【总体判断】\n${report.summary}\n\n`;
+  
+  // 伏吟反吟特殊分析
+  if (fuYinFanYinAnalysis.isSpecial) {
+    result += `【特殊课式】\n`;
+    result += `课式类型：${fuYinFanYinAnalysis.type}\n`;
+    result += `${fuYinFanYinAnalysis.description}\n\n`;
+    
+    result += '【特殊含义】\n';
+    fuYinFanYinAnalysis.implications.forEach(implication => {
+      result += `• ${implication}\n`;
+    });
+    result += '\n';
+    
+    result += '【特殊建议】\n';
+    fuYinFanYinAnalysis.suggestions.forEach(suggestion => {
+      result += `• ${suggestion}\n`;
+    });
+    result += '\n';
+  }
   
   result += '【四课分析】\n';
   const keArray = [siKe.first, siKe.second, siKe.third, siKe.fourth];
@@ -962,4 +999,258 @@ export function calculateFromStrings(
   } catch (error) {
     return `错误：${error instanceof Error ? error.message : '未知错误'}`;
   }
+}
+
+// ==================== 伏吟反吟算法 ====================
+
+/**
+ * 伏吟结果类型
+ */
+interface FuYinResult {
+  type: '伏吟';
+  description: string;
+  baseZhi: DiZhi;
+}
+
+/**
+ * 反吟结果类型
+ */
+interface FanYinResult {
+  type: '反吟';
+  description: string;
+  baseZhi: DiZhi;
+  oppositeZhi: DiZhi;
+}
+
+/**
+ * 检查是否为伏吟
+ * 伏吟：四课中有相同的地支和神将组合
+ */
+function checkFuYin(siKe: SiKe): FuYinResult | null {
+  const keArray = [siKe.first, siKe.second, siKe.third, siKe.fourth];
+  
+  // 检查是否有完全相同的课（地支和神将都相同）
+  for (let i = 0; i < keArray.length; i++) {
+    for (let j = i + 1; j < keArray.length; j++) {
+      const ke1 = keArray[i];
+      const ke2 = keArray[j];
+      
+      if (ke1.zhi === ke2.zhi && ke1.shen === ke2.shen) {
+        return {
+          type: '伏吟',
+          description: `${ke1.zhi}位上${ke1.shen}重复出现，形成伏吟`,
+          baseZhi: ke1.zhi
+        };
+      }
+    }
+  }
+  
+  // 检查日支和时支是否相同（另一种伏吟情况）
+  if (siKe.second.zhi === siKe.fourth.zhi) {
+    return {
+      type: '伏吟',
+      description: `日支${siKe.second.zhi}与时支${siKe.fourth.zhi}相同，形成伏吟`,
+      baseZhi: siKe.second.zhi
+    };
+  }
+  
+  return null;
+}
+
+/**
+ * 检查是否为反吟
+ * 反吟：四课中有相冲的地支组合
+ */
+function checkFanYin(siKe: SiKe): FanYinResult | null {
+  const keArray = [siKe.first, siKe.second, siKe.third, siKe.fourth];
+  
+  // 地支相冲关系
+  const chongRelations: Record<DiZhi, DiZhi> = {
+    '子': '午', '丑': '未', '寅': '申', '卯': '酉',
+    '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
+    '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳'
+  };
+  
+  // 检查四课中是否有相冲的地支
+  for (let i = 0; i < keArray.length; i++) {
+    for (let j = i + 1; j < keArray.length; j++) {
+      const ke1 = keArray[i];
+      const ke2 = keArray[j];
+      
+      if (chongRelations[ke1.zhi] === ke2.zhi) {
+        return {
+          type: '反吟',
+          description: `${ke1.zhi}与${ke2.zhi}相冲，形成反吟`,
+          baseZhi: ke1.zhi,
+          oppositeZhi: ke2.zhi
+        };
+      }
+    }
+  }
+  
+  // 检查日支和时支是否相冲
+  if (chongRelations[siKe.second.zhi] === siKe.fourth.zhi) {
+    return {
+      type: '反吟',
+      description: `日支${siKe.second.zhi}与时支${siKe.fourth.zhi}相冲，形成反吟`,
+      baseZhi: siKe.second.zhi,
+      oppositeZhi: siKe.fourth.zhi
+    };
+  }
+  
+  return null;
+}
+
+/**
+ * 计算伏吟三传
+ * 伏吟时的三传计算方法
+ */
+function calculateFuYinSanChuan(siKe: SiKe, fuYinResult: FuYinResult): SanChuan {
+  const { baseZhi } = fuYinResult;
+  
+  // 伏吟三传：以伏吟的地支为初传，顺行三位
+  const baseIndex = getDiZhiIndex(baseZhi);
+  
+  const chuZhi = baseZhi;
+  const zhongZhi = getDiZhiByIndex((baseIndex + 1) % 12);
+  const moZhi = getDiZhiByIndex((baseIndex + 2) % 12);
+  
+  // 从四课中找对应的神将，如果找不到则使用默认神将
+  const chuShen = getShenByZhi(chuZhi, siKe);
+  const zhongShen = getShenByZhi(zhongZhi, siKe);
+  const moShen = getShenByZhi(moZhi, siKe);
+  
+  return {
+    chu: {
+      zhi: chuZhi,
+      shen: chuShen,
+      meaning: `伏吟初传：${getChuanMeaning(chuShen)}，事情停滞不前`
+    },
+    zhong: {
+      zhi: zhongZhi,
+      shen: zhongShen,
+      meaning: `伏吟中传：${getChuanMeaning(zhongShen)}，需要耐心等待`
+    },
+    mo: {
+      zhi: moZhi,
+      shen: moShen,
+      meaning: `伏吟末传：${getChuanMeaning(moShen)}，最终会有转机`
+    }
+  };
+}
+
+/**
+ * 计算反吟三传
+ * 反吟时的三传计算方法
+ */
+function calculateFanYinSanChuan(siKe: SiKe, fanYinResult: FanYinResult): SanChuan {
+  const { baseZhi, oppositeZhi } = fanYinResult;
+  
+  // 反吟三传：以相冲的两个地支为初传和中传，再找第三传
+  const baseIndex = getDiZhiIndex(baseZhi);
+  const oppositeIndex = getDiZhiIndex(oppositeZhi);
+  
+  // 第三传通常是两个相冲地支的中间位置
+  const moIndex = (baseIndex + 6) % 12; // 相冲地支相差6位
+  const moZhi = getDiZhiByIndex(moIndex);
+  
+  const chuShen = getShenByZhi(baseZhi, siKe);
+  const zhongShen = getShenByZhi(oppositeZhi, siKe);
+  const moShen = getShenByZhi(moZhi, siKe);
+  
+  return {
+    chu: {
+      zhi: baseZhi,
+      shen: chuShen,
+      meaning: `反吟初传：${getChuanMeaning(chuShen)}，事情变化激烈`
+    },
+    zhong: {
+      zhi: oppositeZhi,
+      shen: zhongShen,
+      meaning: `反吟中传：${getChuanMeaning(zhongShen)}，冲突对立明显`
+    },
+    mo: {
+      zhi: moZhi,
+      shen: moShen,
+      meaning: `反吟末传：${getChuanMeaning(moShen)}，需要调和化解`
+    }
+  };
+}
+
+/**
+ * 判断是否为伏吟或反吟课式
+ */
+export function getSpecialKeShiType(siKe: SiKe): string | null {
+  const fuYinResult = checkFuYin(siKe);
+  if (fuYinResult) {
+    return `伏吟（${fuYinResult.description}）`;
+  }
+  
+  const fanYinResult = checkFanYin(siKe);
+  if (fanYinResult) {
+    return `反吟（${fanYinResult.description}）`;
+  }
+  
+  return null;
+}
+
+/**
+ * 获取伏吟反吟的详细分析
+ */
+export function analyzeFuYinFanYin(siKe: SiKe): {
+  isSpecial: boolean;
+  type: '伏吟' | '反吟' | null;
+  description: string;
+  implications: string[];
+  suggestions: string[];
+} {
+  const fuYinResult = checkFuYin(siKe);
+  if (fuYinResult) {
+    return {
+      isSpecial: true,
+      type: '伏吟',
+      description: fuYinResult.description,
+      implications: [
+        '事情发展缓慢，容易停滞不前',
+        '重复性强，可能会遇到相似的情况',
+        '需要耐心等待，不宜急躁行事',
+        '适合巩固现状，不宜大的变动'
+      ],
+      suggestions: [
+        '保持耐心，等待时机成熟',
+        '专注于完善细节，提升质量',
+        '避免重复性的错误',
+        '可以考虑从不同角度重新审视问题'
+      ]
+    };
+  }
+  
+  const fanYinResult = checkFanYin(siKe);
+  if (fanYinResult) {
+    return {
+      isSpecial: true,
+      type: '反吟',
+      description: fanYinResult.description,
+      implications: [
+        '事情变化激烈，容易出现反复',
+        '可能面临冲突和对立',
+        '需要灵活应对，随机应变',
+        '变化中蕴含机遇，也存在风险'
+      ],
+      suggestions: [
+        '保持冷静，避免冲动行事',
+        '寻求调和的方法，化解冲突',
+        '准备多个备选方案',
+        '关注变化中的机会'
+      ]
+    };
+  }
+  
+  return {
+    isSpecial: false,
+    type: null,
+    description: '普通课式，无伏吟反吟',
+    implications: [],
+    suggestions: []
+  };
 }
