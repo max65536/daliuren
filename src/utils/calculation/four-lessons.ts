@@ -28,59 +28,63 @@ import {
 import { isDayTime } from '../calendar/lunar-calendar';
 
 /**
- * 立四课 - 根据日干支和时辰立四课
+ * 立四课 - 根据日干支立四课
  * 传统大六壬四课立法：
- * 一课：日干加临的地支上的神将
- * 二课：日支上的神将  
- * 三课：时干加临的地支上的神将
- * 四课：时支上的神将
+ * 第一课（干阳课）：以日干寄地盘之位，寻天盘地支
+ * 第二课（干阴课）：以第一课天盘地支转到地盘，再推至天盘所得
+ * 第三课（支阳课）：以日支所在地盘之位，寻天盘地支
+ * 第四课（支阴课）：以第三课天盘地支转到地盘，再推至天盘所得
  */
 export function calculateSiKe(
   dayGanZhi: GanZhi,
   hourGanZhi: GanZhi,
-  hour: number
+  hour: number,
+  shenJiangPositions?: Record<DiZhi, ShenJiang>
 ): SiKe {
   const { gan: dayGan, zhi: dayZhi } = dayGanZhi;
-  const { gan: hourGan, zhi: hourZhi } = hourGanZhi;
   
-  // 获取贵人位置
-  const isDay = isDayTime(hour);
-  const guiRenPosition = getGuiRenPosition(dayGan, isDay);
+  // 如果没有传入神将位置，则计算
+  let positions = shenJiangPositions;
+  if (!positions) {
+    const isDay = isDayTime(hour);
+    const guiRenPosition = getGuiRenPosition(dayGan, isDay);
+    positions = calculateShenJiangPositions(guiRenPosition, true);
+  }
   
-  // 计算神将位置
-  const shenJiangPositions = calculateShenJiangPositions(guiRenPosition, true);
-  
-  // 一课：日干加临的地支上的神将
-  const dayGanZhi_target = getGanCorrespondingZhi(dayGan);
+  // 第一课（干阳课）：日干寄地盘之位，寻天盘地支
+  const dayGanDiPanZhi = getGanCorrespondingZhi(dayGan); // 日干寄宫
+  const firstTianPanZhi = getTianPanZhi(dayGanDiPanZhi, positions); // 天盘地支
   const first: KeInfo = {
     gan: dayGan,
-    zhi: dayGanZhi_target,
-    shen: shenJiangPositions[dayGanZhi_target],
+    zhi: firstTianPanZhi,
+    shen: positions[dayGanDiPanZhi], // 神将在地盘位置
     position: 1
   };
   
-  // 二课：日支上的神将
+  // 第二课（干阴课）：第一课天盘地支转到地盘，再推至天盘所得
+  const secondTianPanZhi = getTianPanZhi(firstTianPanZhi, positions);
   const second: KeInfo = {
-    gan: dayGan, // 课的天干仍为日干
-    zhi: dayZhi,
-    shen: shenJiangPositions[dayZhi],
+    gan: dayGan,
+    zhi: secondTianPanZhi,
+    shen: positions[firstTianPanZhi], // 神将在地盘位置
     position: 2
   };
   
-  // 三课：时干加临的地支上的神将
-  const hourGanZhi_target = getGanCorrespondingZhi(hourGan);
+  // 第三课（支阳课）：日支所在地盘之位，寻天盘地支
+  const thirdTianPanZhi = getTianPanZhi(dayZhi, positions);
   const third: KeInfo = {
-    gan: hourGan,
-    zhi: hourGanZhi_target,
-    shen: shenJiangPositions[hourGanZhi_target],
+    gan: dayGan,
+    zhi: thirdTianPanZhi,
+    shen: positions[dayZhi], // 神将在地盘位置
     position: 3
   };
   
-  // 四课：时支上的神将
+  // 第四课（支阴课）：第三课天盘地支转到地盘，再推至天盘所得
+  const fourthTianPanZhi = getTianPanZhi(thirdTianPanZhi, positions);
   const fourth: KeInfo = {
-    gan: hourGan, // 课的天干仍为时干
-    zhi: hourZhi,
-    shen: shenJiangPositions[hourZhi],
+    gan: dayGan,
+    zhi: fourthTianPanZhi,
+    shen: positions[thirdTianPanZhi], // 神将在地盘位置
     position: 4
   };
   
@@ -90,6 +94,35 @@ export function calculateSiKe(
     third,
     fourth
   };
+}
+
+/**
+ * 获取天盘地支 - 根据地盘位置和神将位置计算天盘地支
+ */
+function getTianPanZhi(diPanZhi: DiZhi, shenJiangPositions: Record<DiZhi, ShenJiang>): DiZhi {
+  // 在大六壬中，天盘是活动的，地盘是固定的
+  // 天盘地支 = 地盘地支 + 贵人移动的偏移量
+  // 这里简化处理，实际应该根据月将和贵人位置计算偏移
+  
+  // 找到贵人在哪个地支位置
+  let guiRenDiPanPosition: DiZhi = '子';
+  for (const [zhi, shen] of Object.entries(shenJiangPositions)) {
+    if (shen === '贵人') {
+      guiRenDiPanPosition = zhi as DiZhi;
+      break;
+    }
+  }
+  
+  // 计算偏移量（贵人从子位移动到当前位置的偏移）
+  const guiRenIndex = getDiZhiIndex(guiRenDiPanPosition);
+  const ziIndex = getDiZhiIndex('子');
+  const offset = (guiRenIndex - ziIndex + 12) % 12;
+  
+  // 天盘地支 = 地盘地支 + 偏移量
+  const diPanIndex = getDiZhiIndex(diPanZhi);
+  const tianPanIndex = (diPanIndex + offset) % 12;
+  
+  return getDiZhiByIndex(tianPanIndex);
 }
 
 /**
@@ -153,9 +186,9 @@ function getGanCorrespondingZhi(gan: TianGan): DiZhi {
 }
 
 /**
- * 发三传 - 从四课中提取三传
+ * 发三传 - 从四课中提取三传（九宗门法）
  */
-export function calculateSanChuan(siKe: SiKe): SanChuan {
+export function calculateSanChuan(siKe: SiKe, dayGan: TianGan): SanChuan {
   // 首先检查是否为伏吟或反吟
   const fuYinResult = checkFuYin(siKe);
   if (fuYinResult) {
@@ -167,23 +200,156 @@ export function calculateSanChuan(siKe: SiKe): SanChuan {
     return calculateFanYinSanChuan(siKe, fanYinResult);
   }
   
-  // 检查四课中的重复情况
-  const keArray = [siKe.first, siKe.second, siKe.third, siKe.fourth];
-  const uniqueKe = getUniqueKe(keArray);
+  // 检查是否为八专课（日干支同位）
+  const baZhuanResult = checkBaZhuan(siKe, dayGan);
+  if (baZhuanResult) {
+    return calculateBaZhuanSanChuan(siKe, dayGan);
+  }
   
-  if (uniqueKe.length === 4) {
-    // 四课无重复，用贼克法
+  // 检查四课中的克制关系
+  const keArray = [siKe.first, siKe.second, siKe.third, siKe.fourth];
+  const keRelations = analyzeKeRelations(keArray);
+  
+  // 1. 贼克法 - 有下贼上或上克下
+  if (keRelations.xiaBeiShang.length > 0 || keRelations.shangKexia.length > 0) {
     return calculateZeiKeFa(siKe);
-  } else if (uniqueKe.length === 3) {
-    // 一重一空，用涉害法
-    return calculateSheHaiFa(siKe, uniqueKe);
-  } else if (uniqueKe.length === 2) {
-    // 二重二空，用遥克法
-    return calculateYaoKeFa(siKe, uniqueKe);
-  } else {
-    // 三重一空或四重，用昴星法
+  }
+  
+  // 2. 遥克法 - 四课上下无克，看日干与四课的遥克关系
+  const yaoKeResult = analyzeYaoKe(siKe, dayGan);
+  if (yaoKeResult.hasYaoKe) {
+    return calculateYaoKeFaNew(siKe, yaoKeResult);
+  }
+  
+  // 3. 昴星法 - 四课俱全，上下无克，且无遥克
+  const uniqueKe = getUniqueKe(keArray);
+  if (uniqueKe.length === 4) {
     return calculateMaoXingFa(siKe, uniqueKe);
   }
+  
+  // 4. 别责法 - 四课缺一，只有三课
+  if (uniqueKe.length === 3) {
+    return calculateBieZeFa(siKe, uniqueKe);
+  }
+  
+  // 默认使用贼克法
+  return calculateZeiKeFa(siKe);
+}
+
+/**
+ * 分析四课的克制关系
+ */
+function analyzeKeRelations(keArray: KeInfo[]): {
+  xiaBeiShang: KeInfo[]; // 下贼上（地支克天盘）
+  shangKexia: KeInfo[];  // 上克下（天盘克地支）
+} {
+  const xiaBeiShang: KeInfo[] = [];
+  const shangKexia: KeInfo[] = [];
+  
+  for (const ke of keArray) {
+    // 在四课中，ke.zhi是天盘地支，需要找到对应的地盘地支
+    const diPanZhi = getDiPanZhiForKe(ke);
+    
+    // 检查下贼上（地盘克天盘）
+    if (isWuXingKe(getZhiWuXing(diPanZhi), getZhiWuXing(ke.zhi))) {
+      xiaBeiShang.push(ke);
+    }
+    
+    // 检查上克下（天盘克地盘）
+    if (isWuXingKe(getZhiWuXing(ke.zhi), getZhiWuXing(diPanZhi))) {
+      shangKexia.push(ke);
+    }
+  }
+  
+  return { xiaBeiShang, shangKexia };
+}
+
+/**
+ * 获取课对应的地盘地支
+ */
+function getDiPanZhiForKe(ke: KeInfo): DiZhi {
+  // 根据课的位置确定地盘地支
+  switch (ke.position) {
+    case 1: // 一课：日干寄宫
+      return getGanCorrespondingZhi(ke.gan);
+    case 2: // 二课：第一课天盘地支
+      // 这里需要从四课结构中推导，简化处理
+      return ke.zhi;
+    case 3: // 三课：日支
+      // 需要从日支推导，简化处理
+      return ke.zhi;
+    case 4: // 四课：第三课天盘地支
+      return ke.zhi;
+    default:
+      return ke.zhi;
+  }
+}
+
+/**
+ * 分析遥克关系
+ */
+function analyzeYaoKe(siKe: SiKe, dayGan: TianGan): {
+  hasYaoKe: boolean;
+  shangShenKeRiGan: KeInfo[];
+  riGanKeShangShen: KeInfo[];
+} {
+  const keArray = [siKe.first, siKe.second, siKe.third, siKe.fourth];
+  const shangShenKeRiGan: KeInfo[] = [];
+  const riGanKeShangShen: KeInfo[] = [];
+  
+  const dayGanWuXing = getGanWuXing(dayGan);
+  
+  for (const ke of keArray) {
+    const keWuXing = getZhiWuXing(ke.zhi);
+    
+    // 上神克日干
+    if (isWuXingKe(keWuXing, dayGanWuXing)) {
+      shangShenKeRiGan.push(ke);
+    }
+    
+    // 日干克上神
+    if (isWuXingKe(dayGanWuXing, keWuXing)) {
+      riGanKeShangShen.push(ke);
+    }
+  }
+  
+  return {
+    hasYaoKe: shangShenKeRiGan.length > 0 || riGanKeShangShen.length > 0,
+    shangShenKeRiGan,
+    riGanKeShangShen
+  };
+}
+
+/**
+ * 获取天干对应的五行
+ */
+function getGanWuXing(gan: TianGan): '金' | '木' | '水' | '火' | '土' {
+  const ganWuXingMap: Record<TianGan, '金' | '木' | '水' | '火' | '土'> = {
+    '甲': '木', '乙': '木',
+    '丙': '火', '丁': '火',
+    '戊': '土', '己': '土',
+    '庚': '金', '辛': '金',
+    '壬': '水', '癸': '水'
+  };
+  return ganWuXingMap[gan];
+}
+
+/**
+ * 检查是否为八专课
+ */
+function checkBaZhuan(siKe: SiKe, dayGan: TianGan): { isBaZhuan: boolean; dayZhi: DiZhi } | null {
+  // 八专日：甲寅、乙卯、丙午、丁未、戊戌、己亥、庚申、辛酉、壬子、癸丑
+  const baZhuanPairs: Record<TianGan, DiZhi> = {
+    '甲': '寅', '乙': '卯', '丙': '午', '丁': '未', '戊': '戌',
+    '己': '亥', '庚': '申', '辛': '酉', '壬': '子', '癸': '丑'
+  };
+  
+  const expectedZhi = baZhuanPairs[dayGan];
+  if (expectedZhi && siKe.third.zhi === expectedZhi) {
+    return { isBaZhuan: true, dayZhi: expectedZhi };
+  }
+  
+  return null;
 }
 
 /**
@@ -740,7 +906,7 @@ export function calculateDaLiuRenComplete(
   const siKe = calculateSiKe(day, hourGanZhi, hour);
   
   // 计算三传
-  const sanChuan = calculateSanChuan(siKe);
+  const sanChuan = calculateSanChuan(siKe, day.gan);
   
   // 生成字符串格式输出
   const tianDiPan = formatTianDiPan(siZhu, shenJiangPositions);
@@ -1253,4 +1419,133 @@ export function analyzeFuYinFanYin(siKe: SiKe): {
     implications: [],
     suggestions: []
   };
+}
+
+// ==================== 缺失的函数实现 ====================
+
+/**
+ * 计算八专三传
+ */
+function calculateBaZhuanSanChuan(siKe: SiKe, dayGan: TianGan): SanChuan {
+  // 八专课的三传计算
+  const isYangGan = ['甲', '丙', '戊', '庚', '壬'].includes(dayGan);
+  
+  if (isYangGan) {
+    // 阳日以干上神顺数三位为初传
+    const ganShangShen = siKe.first.zhi;
+    const ganShangShenIndex = getDiZhiIndex(ganShangShen);
+    
+    const chuZhi = getDiZhiByIndex((ganShangShenIndex + 2) % 12); // 顺数三位
+    const zhongZhi = siKe.first.zhi; // 干上神为中传
+    const moZhi = siKe.first.zhi; // 干上神为末传
+    
+    return {
+      chu: {
+        zhi: chuZhi,
+        shen: getShenByZhi(chuZhi, siKe),
+        meaning: '八专初传'
+      },
+      zhong: {
+        zhi: zhongZhi,
+        shen: siKe.first.shen,
+        meaning: '八专中传'
+      },
+      mo: {
+        zhi: moZhi,
+        shen: siKe.first.shen,
+        meaning: '八专末传'
+      }
+    };
+  } else {
+    // 阴日以第四课的上神逆数三位为初传
+    const zhiShangShen = siKe.fourth.zhi;
+    const zhiShangShenIndex = getDiZhiIndex(zhiShangShen);
+    
+    const chuZhi = getDiZhiByIndex((zhiShangShenIndex - 2 + 12) % 12); // 逆数三位
+    const zhongZhi = siKe.first.zhi; // 干上神为中传
+    const moZhi = siKe.first.zhi; // 干上神为末传
+    
+    return {
+      chu: {
+        zhi: chuZhi,
+        shen: getShenByZhi(chuZhi, siKe),
+        meaning: '八专初传'
+      },
+      zhong: {
+        zhi: zhongZhi,
+        shen: siKe.first.shen,
+        meaning: '八专中传'
+      },
+      mo: {
+        zhi: moZhi,
+        shen: siKe.first.shen,
+        meaning: '八专末传'
+      }
+    };
+  }
+}
+
+/**
+ * 新的遥克法实现
+ */
+function calculateYaoKeFaNew(siKe: SiKe, yaoKeResult: ReturnType<typeof analyzeYaoKe>): SanChuan {
+  // 优先选择上神克日干的课
+  if (yaoKeResult.shangShenKeRiGan.length > 0) {
+    const chu = createChuanInfo(yaoKeResult.shangShenKeRiGan[0]);
+    
+    // 中传和末传按传统方法计算
+    const zhongZhi = getNextZhi(chu.zhi);
+    const moZhi = getNextZhi(zhongZhi);
+    
+    return {
+      chu,
+      zhong: {
+        zhi: zhongZhi,
+        shen: getShenByZhi(zhongZhi, siKe),
+        meaning: '遥克中传'
+      },
+      mo: {
+        zhi: moZhi,
+        shen: getShenByZhi(moZhi, siKe),
+        meaning: '遥克末传'
+      }
+    };
+  }
+  
+  // 其次选择日干克上神的课
+  if (yaoKeResult.riGanKeShangShen.length > 0) {
+    const chu = createChuanInfo(yaoKeResult.riGanKeShangShen[0]);
+    
+    const zhongZhi = getNextZhi(chu.zhi);
+    const moZhi = getNextZhi(zhongZhi);
+    
+    return {
+      chu,
+      zhong: {
+        zhi: zhongZhi,
+        shen: getShenByZhi(zhongZhi, siKe),
+        meaning: '遥克中传'
+      },
+      mo: {
+        zhi: moZhi,
+        shen: getShenByZhi(moZhi, siKe),
+        meaning: '遥克末传'
+      }
+    };
+  }
+  
+  // 默认情况
+  return calculateZeiKeFa(siKe);
+}
+
+/**
+ * 别责法实现
+ */
+function calculateBieZeFa(siKe: SiKe, uniqueKe: KeInfo[]): SanChuan {
+  // 别责法：四课缺一，只有三课时使用
+  const chu = createChuanInfo(uniqueKe[0]);
+  const zhong = createChuanInfo(uniqueKe[1]);
+  const mo = createChuanInfo(uniqueKe[2]);
+  
+  return { chu, zhong, mo };
 }
