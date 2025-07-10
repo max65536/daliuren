@@ -1,32 +1,29 @@
 import { useState } from 'react';
 import './App.css';
-import { generateDivinationResult } from './utils/calculation/plate-calculation';
+import { calculateFromStrings } from './utils/calculation/four-lessons';
 import { getCurrentChineseDateTime, formatChineseDateTime } from './utils/calendar/lunar-calendar';
-import type { DivinationRequest, DivinationResult } from './types/divination';
-import HeavenEarthPlate from './components/plates/heaven-earth-plate';
-import FourLessons from './components/plates/four-lessons';
 
 function App() {
-  const [result, setResult] = useState<DivinationResult | null>(null);
+  const [result, setResult] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [datetime, setDatetime] = useState(new Date());
   const [question, setQuestion] = useState('');
   const [category, setCategory] = useState<'事业' | '财运' | '感情' | '健康' | '学业' | '其他'>('其他');
+  const [dayGanZhi, setDayGanZhi] = useState('丁未');
+  const [hourGanZhi, setHourGanZhi] = useState('戊申');
+  const [yueJiang, setYueJiang] = useState('未');
 
   const handleDivination = async () => {
     setLoading(true);
     
     try {
-      const request: DivinationRequest = {
-        datetime,
-        question: question || undefined,
-        category
-      };
-      
-      const divinationResult = generateDivinationResult(request);
+      // 使用新的四课算法
+      const hour = datetime.getHours();
+      const divinationResult = calculateFromStrings(dayGanZhi, hourGanZhi, yueJiang, hour);
       setResult(divinationResult);
     } catch (error) {
       console.error('占卜计算错误:', error);
+      setResult(`错误：${error instanceof Error ? error.message : '未知错误'}`);
     } finally {
       setLoading(false);
     }
@@ -37,13 +34,14 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>大六壬起课</h1>
-        <p className="subtitle">传统中国占卜术数应用</p>
+        <h1>易瑞笔记 六壬排盘</h1>
+        <p className="subtitle">传统大六壬起课应用</p>
       </header>
 
-      <main className="app-main">
+      <main className={`app-main ${result ? 'result-mode' : ''}`}>
+        {!result && (
         <div className="divination-form">
-          <h2>起课设置</h2>
+          <h2>起课参数</h2>
           
           <div className="form-group">
             <label htmlFor="datetime">选择时间：</label>
@@ -53,6 +51,54 @@ function App() {
               value={datetime.toISOString().slice(0, 16)}
               onChange={(e) => setDatetime(new Date(e.target.value))}
             />
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="dayGanZhi">日干支：</label>
+              <input
+                id="dayGanZhi"
+                type="text"
+                value={dayGanZhi}
+                onChange={(e) => setDayGanZhi(e.target.value)}
+                placeholder="如：丁未"
+                maxLength={2}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="hourGanZhi">时干支：</label>
+              <input
+                id="hourGanZhi"
+                type="text"
+                value={hourGanZhi}
+                onChange={(e) => setHourGanZhi(e.target.value)}
+                placeholder="如：戊申"
+                maxLength={2}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="yueJiang">月将：</label>
+              <select
+                id="yueJiang"
+                value={yueJiang}
+                onChange={(e) => setYueJiang(e.target.value)}
+              >
+                <option value="子">子</option>
+                <option value="丑">丑</option>
+                <option value="寅">寅</option>
+                <option value="卯">卯</option>
+                <option value="辰">辰</option>
+                <option value="巳">巳</option>
+                <option value="午">午</option>
+                <option value="未">未</option>
+                <option value="申">申</option>
+                <option value="酉">酉</option>
+                <option value="戌">戌</option>
+                <option value="亥">亥</option>
+              </select>
+            </div>
           </div>
 
           <div className="form-group">
@@ -90,103 +136,48 @@ function App() {
             {loading ? '起课中...' : '开始起课'}
           </button>
         </div>
+        )}
 
+        {!result && (
         <div className="current-time">
           <h3>当前时间信息</h3>
           <pre className="time-display">
             {formatChineseDateTime(currentTime)}
           </pre>
         </div>
+        )}
 
         {result && (
           <div className="divination-result">
-            <h2>占卜结果</h2>
+            <div className="result-header">
+              <h2>大六壬排盘结果</h2>
+              {question && (
+                <div className="question-info">
+                  <strong>占问：</strong>{question} ({category})
+                </div>
+              )}
+            </div>
             
-            <div className="result-summary">
-              <div className="confidence">
-                <span>可信度：</span>
-                <div className="confidence-bar">
-                  <div 
-                    className="confidence-fill"
-                    style={{ width: `${result.confidence * 100}%` }}
-                  />
-                </div>
-                <span>{Math.round(result.confidence * 100)}%</span>
-              </div>
+            <div className="traditional-plate">
+              <pre className="plate-content">
+                {result}
+              </pre>
             </div>
 
-            <div className="result-content">
-              <div className="general-interpretation">
-                <h3>总体解释</h3>
-                <p>{result.interpretation.general}</p>
-              </div>
-
-              <div className="detailed-analysis">
-                <h3>详细分析</h3>
-                <ul>
-                  {result.interpretation.detailed.map((detail, index) => (
-                    <li key={index}>{detail}</li>
-                  ))}
-                </ul>
-              </div>
-
-              {result.interpretation.suggestions.length > 0 && (
-                <div className="suggestions">
-                  <h3>建议</h3>
-                  <ul>
-                    {result.interpretation.suggestions.map((suggestion, index) => (
-                      <li key={index} className="suggestion-item">{suggestion}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {result.interpretation.warnings.length > 0 && (
-                <div className="warnings">
-                  <h3>注意事项</h3>
-                  <ul>
-                    {result.interpretation.warnings.map((warning, index) => (
-                      <li key={index} className="warning-item">{warning}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-
-            {/* 盘面可视化 */}
-            <div className="plates-visualization">
-              <div className="plates-grid">
-                <HeavenEarthPlate 
-                  tianPan={result.pan.tianPan}
-                  diPan={result.pan.diPan}
-                />
-                <FourLessons 
-                  siKe={result.pan.renPan.siKe}
-                  sanChuan={result.pan.renPan.sanChuan}
-                />
-              </div>
-            </div>
-
-            <div className="plate-info">
-              <h3>盘面信息</h3>
-              <div className="plate-summary">
-                <div className="ganzhi-info">
-                  <span>日干支：{result.pan.metadata.ganZhi.day.gan}{result.pan.metadata.ganZhi.day.zhi}</span>
-                  <span>时干支：{result.pan.metadata.ganZhi.hour.gan}{result.pan.metadata.ganZhi.hour.zhi}</span>
-                </div>
-                <div className="term-info">
-                  <span>节气：{result.pan.metadata.solarTerm}</span>
-                  <span>农历：{result.pan.metadata.lunarDate}</span>
-                </div>
-                <div className="spirit-info">
-                  <span>贵人位：{result.pan.shenPan.guiRenPosition}</span>
-                  <span>三传：
-                    {result.pan.renPan.sanChuan.chu.shen} → 
-                    {result.pan.renPan.sanChuan.zhong.shen} → 
-                    {result.pan.renPan.sanChuan.mo.shen}
-                  </span>
-                </div>
-              </div>
+            <div className="result-actions">
+              <button 
+                className="btn-secondary"
+                onClick={() => navigator.clipboard?.writeText(result)}
+              >
+                复制结果
+              </button>
+              <button 
+                className="btn-secondary"
+                onClick={() => setResult(null)}
+                style={{ marginLeft: '1rem' }}
+              >
+                重新起课
+              </button>
             </div>
           </div>
         )}

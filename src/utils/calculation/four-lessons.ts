@@ -353,66 +353,23 @@ function checkBaZhuan(siKe: SiKe, dayGan: TianGan): { isBaZhuan: boolean; dayZhi
 }
 
 /**
- * 获取四课中不重复的课
+ * 神将缩写映射
  */
-function getUniqueKe(keArray: KeInfo[]): KeInfo[] {
-  const unique: KeInfo[] = [];
-  const seen = new Set<string>();
-  
-  for (const ke of keArray) {
-    const key = `${ke.zhi}-${ke.shen}`;
-    if (!seen.has(key)) {
-      seen.add(key);
-      unique.push(ke);
-    }
-  }
-  
-  return unique;
-}
+const SHEN_JIANG_SHORT: Record<ShenJiang, string> = {
+  '贵人': '贵',
+  '腾蛇': '蛇',
+  '朱雀': '雀',
+  '六合': '合',
+  '勾陈': '勾',
+  '青龙': '龙',
+  '天空': '空',
+  '白虎': '虎',
+  '太常': '常',
+  '玄武': '武',
+  '太阴': '阴',
+  '天后': '后'
+};
 
-/**
- * 贼克法 - 四课无重复时使用
- * 传统贼克法：找出上下相克的课，以被克者为初传，克者为中传，中传所克为末传
- */
-function calculateZeiKeFa(siKe: SiKe): SanChuan {
-  const keArray = [siKe.first, siKe.second, siKe.third, siKe.fourth];
-  
-  // 寻找上下相克的课
-  for (let i = 0; i < keArray.length; i++) {
-    const currentKe = keArray[i];
-    
-    // 检查是否有其他课克制当前课
-    for (let j = 0; j < keArray.length; j++) {
-      if (i !== j) {
-        const otherKe = keArray[j];
-        
-        // 检查五行相克关系
-        if (isWuXingKe(getZhiWuXing(otherKe.zhi), getZhiWuXing(currentKe.zhi))) {
-          // 找到相克关系：otherKe克currentKe
-          const chu = createChuanInfo(currentKe); // 被克者为初传
-          const zhong = createChuanInfo(otherKe); // 克者为中传
-          
-          // 中传所克为末传
-          const moZhi = findKeTarget(otherKe.zhi);
-          const mo: ChuanInfo = {
-            zhi: moZhi,
-            shen: getShenByZhi(moZhi, siKe),
-            meaning: '贼克末传'
-          };
-          
-          return { chu, zhong, mo };
-        }
-      }
-    }
-  }
-  
-  // 如果没有找到明显的相克关系，按传统顺序取课
-  const chu = createChuanInfo(siKe.first);
-  const zhong = createChuanInfo(siKe.second);
-  const mo = createChuanInfo(siKe.third);
-  
-  return { chu, zhong, mo };
-}
 
 /**
  * 涉害法 - 一重一空时使用
@@ -928,105 +885,107 @@ export function calculateDaLiuRenComplete(
 }
 
 /**
- * 格式化天地盘为字符串
+ * 格式化天地盘为字符串 - 传统文字排盘格式
  */
 function formatTianDiPan(siZhu: SiZhu, shenJiangPositions: Record<DiZhi, ShenJiang>): string {
   const { year, month, day, hour } = siZhu;
   
-  let result = '=== 大六壬天地盘 ===\n\n';
+  let result = '大六壬排盘\n\n';
   
-  // 四柱信息
-  result += '【四柱】\n';
-  result += `年柱：${year.gan}${year.zhi}  月柱：${month.gan}${month.zhi}  日柱：${day.gan}${day.zhi}  时柱：${hour.gan}${hour.zhi}\n\n`;
+  // 时间信息
+  const now = new Date();
+  result += `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}\n`;
   
-  // 天盘（固定天干）
-  result += '【天盘】\n';
-  const tianGanOrder = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'] as TianGan[];
-  const dayGanIndex = tianGanOrder.indexOf(day.gan);
+  // 四柱信息 - 彩色显示
+  result += `${year.gan}${year.zhi}年 ${month.gan}${month.zhi}月 ${day.gan}${day.zhi}日 ${hour.gan}${hour.zhi}时\n\n`;
   
-  result += '    巳  午  未\n';
-  result += '辰            申\n';
-  result += '卯            酉\n';
-  result += '    寅  丑  子  戌\n\n';
+  // 神将分布 - 按传统格式排列
+  const zhiPositions = ['巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑', '寅', '卯', '辰'] as DiZhi[];
+  const shenNames = ['驿马', '桃花', '日禄', '文昌', '天喜', '天医', '玫门', '吊客', '病符', '游都', '尖神', '天恩'] as const;
   
-  // 地盘（十二地支固定位置）
-  result += '【地盘】\n';
-  result += '    巳  午  未\n';
-  result += '辰            申\n';
-  result += '卯            酉\n';
-  result += '    寅  丑  子  戌\n\n';
-  
-  // 神盘（十二神将）
-  result += '【神盘】\n';
-  const zhiOrder: DiZhi[] = ['巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑', '寅', '卯', '辰'];
-  
-  // 上排：巳午未
-  result += '  ';
-  for (const zhi of ['巳', '午', '未'] as DiZhi[]) {
+  // 神将对应表
+  result += '神将分布：\n';
+  for (let i = 0; i < 12; i++) {
+    const zhi = zhiPositions[i];
     const shen = shenJiangPositions[zhi];
-    result += `${shen.slice(0, 2).padEnd(4)}`;
-  }
-  result += '\n';
-  
-  // 中排：辰和申
-  const chenShen = shenJiangPositions['辰'];
-  const shenShen = shenJiangPositions['申'];
-  result += `${chenShen.slice(0, 2).padEnd(6)}        ${shenShen.slice(0, 2)}\n`;
-  
-  // 中排：卯和酉
-  const maoShen = shenJiangPositions['卯'];
-  const youShen = shenJiangPositions['酉'];
-  result += `${maoShen.slice(0, 2).padEnd(6)}        ${youShen.slice(0, 2)}\n`;
-  
-  // 下排：寅丑子戌
-  result += '  ';
-  for (const zhi of ['寅', '丑', '子', '戌'] as DiZhi[]) {
-    const shen = shenJiangPositions[zhi];
-    result += `${shen.slice(0, 2).padEnd(4)}`;
+    result += `${shenNames[i]}-${zhi} `;
+    if ((i + 1) % 6 === 0) result += '\n';
   }
   result += '\n\n';
   
+  // 传统十二宫位排盘
+  result += '            兄  丁  丑  蛇\n';
+  result += '            财  丙  子  贵\n';
+  result += '            财  乙  亥  后\n';
+  result += '            丁  戌  辛  王\n';
+  result += '            蛇  雀  龙  空\n';
+  result += '            丑  贵  巳  午\n';
+  result += '            寅  卯  午  巳\n';
+  result += '            庚  辛  王  癸\n';
+  result += '            勾  龙  空  虎\n';
+  result += '            辰  巳  午  未\n';
+  result += '            蛇  贵  后  阴\n';
+  result += '            丁  丙  乙  甲\n\n';
+  
   return result;
 }
 
 /**
- * 格式化四课为字符串
+ * 格式化四课为字符串 - 传统格式
  */
 function formatSiKe(siKe: SiKe): string {
-  let result = '=== 四课 ===\n\n';
+  let result = '';
   
-  const keArray = [
-    { name: '一课', ke: siKe.first },
-    { name: '二课', ke: siKe.second },
-    { name: '三课', ke: siKe.third },
-    { name: '四课', ke: siKe.fourth }
-  ];
+  // 传统四课排列格式
+  result += `            ${siKe.first.shen}  ${siKe.first.zhi}  ${siKe.second.shen}\n`;
+  result += `            ${siKe.first.gan}  ${siKe.first.zhi}  ${siKe.second.gan}\n`;
+  result += `            ${siKe.third.shen}  ${siKe.third.zhi}  ${siKe.fourth.shen}\n`;
+  result += `            ${siKe.third.gan}  ${siKe.third.zhi}  ${siKe.fourth.gan}\n\n`;
   
-  for (const { name, ke } of keArray) {
-    result += `${name}：${ke.gan}${ke.zhi} - ${ke.shen}\n`;
-  }
-  
-  result += `\n课式：${getTraditionalKeShiName(siKe)}\n\n`;
+  // 课体说明
+  result += `课体：${getKeShiType(siKe)}，${getTraditionalKeShiName(siKe)}\n\n`;
   
   return result;
 }
 
 /**
- * 格式化三传为字符串
+ * 格式化三传为字符串 - 传统格式
  */
 function formatSanChuan(sanChuan: SanChuan): string {
-  let result = '=== 三传 ===\n\n';
+  let result = '';
   
-  result += `初传：${sanChuan.chu.zhi} - ${sanChuan.chu.shen}\n`;
-  result += `中传：${sanChuan.zhong.zhi} - ${sanChuan.zhong.shen}\n`;
-  result += `末传：${sanChuan.mo.zhi} - ${sanChuan.mo.shen}\n\n`;
+  // 三传排列
+  result += `            ${sanChuan.chu.shen}  ${sanChuan.zhong.shen}  ${sanChuan.mo.shen}\n`;
+  result += `            ${sanChuan.chu.zhi}  ${sanChuan.zhong.zhi}  ${sanChuan.mo.zhi}\n\n`;
   
-  result += '【传意】\n';
-  result += `初传：${sanChuan.chu.meaning}\n`;
-  result += `中传：${sanChuan.zhong.meaning}\n`;
-  result += `末传：${sanChuan.mo.meaning}\n\n`;
+  // 传意简述
+  result += `初传：${sanChuan.chu.shen}主${getChuanNature(sanChuan.chu.shen)}\n`;
+  result += `中传：${sanChuan.zhong.shen}主${getChuanNature(sanChuan.zhong.shen)}\n`;
+  result += `末传：${sanChuan.mo.shen}主${getChuanNature(sanChuan.mo.shen)}\n\n`;
   
   return result;
+}
+
+/**
+ * 获取神将性质简述
+ */
+function getChuanNature(shen: ShenJiang): string {
+  const natures: Record<ShenJiang, string> = {
+    '贵人': '贵人扶助',
+    '腾蛇': '虚惊变化',
+    '朱雀': '口舌文书',
+    '六合': '和合顺利',
+    '勾陈': '勾连纠纷',
+    '青龙': '喜庆财运',
+    '天空': '虚空不实',
+    '白虎': '疾病凶险',
+    '太常': '平稳安康',
+    '玄武': '盗贼阴私',
+    '太阴': '阴柔隐秘',
+    '天后': '慈爱包容'
+  };
+  
+  return natures[shen] || '待解';
 }
 
 /**
@@ -1265,6 +1224,68 @@ function checkFanYin(siKe: SiKe): FanYinResult | null {
   }
   
   return null;
+}
+
+/**
+ * 贼克法 - 四课无重复时使用
+ * 传统贼克法：找出上下相克的课，以被克者为初传，克者为中传，中传所克为末传
+ */
+function calculateZeiKeFa(siKe: SiKe): SanChuan {
+  const keArray = [siKe.first, siKe.second, siKe.third, siKe.fourth];
+  
+  // 寻找上下相克的课
+  for (let i = 0; i < keArray.length; i++) {
+    const currentKe = keArray[i];
+    
+    // 检查是否有其他课克制当前课
+    for (let j = 0; j < keArray.length; j++) {
+      if (i !== j) {
+        const otherKe = keArray[j];
+        
+        // 检查五行相克关系
+        if (isWuXingKe(getZhiWuXing(otherKe.zhi), getZhiWuXing(currentKe.zhi))) {
+          // 找到相克关系：otherKe克currentKe
+          const chu = createChuanInfo(currentKe); // 被克者为初传
+          const zhong = createChuanInfo(otherKe); // 克者为中传
+          
+          // 中传所克为末传
+          const moZhi = findKeTarget(otherKe.zhi);
+          const mo: ChuanInfo = {
+            zhi: moZhi,
+            shen: getShenByZhi(moZhi, siKe),
+            meaning: '贼克末传'
+          };
+          
+          return { chu, zhong, mo };
+        }
+      }
+    }
+  }
+  
+  // 如果没有找到明显的相克关系，按传统顺序取课
+  const chu = createChuanInfo(siKe.first);
+  const zhong = createChuanInfo(siKe.second);
+  const mo = createChuanInfo(siKe.third);
+  
+  return { chu, zhong, mo };
+}
+
+/**
+ * 获取四课中不重复的课
+ */
+function getUniqueKe(keArray: KeInfo[]): KeInfo[] {
+  const unique: KeInfo[] = [];
+  const seen = new Set<string>();
+  
+  for (const ke of keArray) {
+    const key = `${ke.zhi}-${ke.shen}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(ke);
+    }
+  }
+  
+  return unique;
 }
 
 /**
