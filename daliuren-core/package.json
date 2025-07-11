@@ -1,19 +1,21 @@
 {
-  "name": "daliuren-core",
+  "name": "@max65536/daliuren",
   "version": "1.0.0",
   "description": "大六壬核心计算库 - Da Liu Ren Divination Core Library",
-  "main": "dist/index.cjs.js",
+  "main": "dist/index.umd.js",
   "module": "dist/index.es.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "scripts": {
     "build": "tsc && vite build",
     "dev": "vite build --watch",
     "test": "jest",
     "lint": "eslint src --ext .ts,.tsx",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "daliuren",
@@ -22,10 +24,16 @@
     "traditional",
     "fortune",
     "大六壬",
-    "占卜"
+    "占卜",
+    "liuren",
+    "chinese-divination",
+    "traditional-chinese"
   ],
-  "author": "Your Name",
+  "author": "max65536",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "@types/jest": "^29.5.0",
     "@types/node": "^20.0.0",
@@ -43,10 +51,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-username/daliuren-core.git"
+    "url": "git+https://github.com/max65536/daliuren.git",
+    "directory": "daliuren-core"
   },
   "bugs": {
-    "url": "https://github.com/your-username/daliuren-core/issues"
+    "url": "https://github.com/max65536/daliuren/issues"
   },
-  "homepage": "https://github.com/your-username/daliuren-core#readme"
+  "homepage": "https://github.com/max65536/daliuren/tree/main/daliuren-core#readme"
 }
