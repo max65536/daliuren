@@ -2,8 +2,6 @@
 export * from "./types";
 export * from "./constants/stems-branches";
 export * from "./constants/spirits";
-export * from "./utils/calendar";
-export * from "./calculation/four-lessons";
 export * from "./calculation/divination";
 
 // 便捷调用接口
