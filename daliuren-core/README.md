@@ -122,6 +122,12 @@ MIT
 
 欢迎提交Issue和Pull Request到 [GitHub仓库](https://github.com/max65536/daliuren)！
 
+## 📚 文档
+
+- **[使用指南](./USAGE_GUIDE.md)** - 详细的使用教程和示例
+- **[API参考](./API_REFERENCE.md)** - 完整的API文档
+- **[GitHub仓库](https://github.com/max65536/daliuren)** - 源码和问题反馈
+
 ## 更新日志
 
 ### 1.0.0
