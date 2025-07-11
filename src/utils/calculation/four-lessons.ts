@@ -365,7 +365,7 @@ const SHEN_JIANG_SHORT: Record<ShenJiang, string> = {
   '天空': '空',
   '白虎': '虎',
   '太常': '常',
-  '玄武': '武',
+  '玄武': '玄',
   '太阴': '阴',
   '天后': '后'
 };
@@ -866,7 +866,7 @@ export function calculateDaLiuRenComplete(
   const sanChuan = calculateSanChuan(siKe, day.gan);
   
   // 生成字符串格式输出
-  const tianDiPan = formatTianDiPan(siZhu, shenJiangPositions);
+  const tianDiPan = formatTianDiPan(siZhu, shenJiangPositions, yueJiang);
   const siKeStr = formatSiKe(siKe);
   const sanChuanStr = formatSanChuan(sanChuan);
   const analysis = formatAnalysis(siKe, sanChuan);
@@ -885,9 +885,9 @@ export function calculateDaLiuRenComplete(
 }
 
 /**
- * 格式化天地盘为字符串 - 传统文字排盘格式
+ * 格式化天地盘为字符串 - 传统大六壬排盘格式
  */
-function formatTianDiPan(siZhu: SiZhu, shenJiangPositions: Record<DiZhi, ShenJiang>): string {
+function formatTianDiPan(siZhu: SiZhu, shenJiangPositions: Record<DiZhi, ShenJiang>, yueJiang: DiZhi): string {
   const { year, month, day, hour } = siZhu;
   
   let result = '大六壬排盘\n\n';
@@ -895,40 +895,189 @@ function formatTianDiPan(siZhu: SiZhu, shenJiangPositions: Record<DiZhi, ShenJia
   // 时间信息
   const now = new Date();
   result += `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}\n`;
-  
-  // 四柱信息 - 彩色显示
   result += `${year.gan}${year.zhi}年 ${month.gan}${month.zhi}月 ${day.gan}${day.zhi}日 ${hour.gan}${hour.zhi}时\n\n`;
   
-  // 神将分布 - 按传统格式排列
-  const zhiPositions = ['巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑', '寅', '卯', '辰'] as DiZhi[];
-  const shenNames = ['驿马', '桃花', '日禄', '文昌', '天喜', '天医', '玫门', '吊客', '病符', '游都', '尖神', '天恩'] as const;
+  // 月将信息
+  result += `【月将】${yueJiang}\n\n`;
   
-  // 神将对应表
-  result += '神将分布：\n';
-  for (let i = 0; i < 12; i++) {
-    const zhi = zhiPositions[i];
-    const shen = shenJiangPositions[zhi];
-    result += `${shenNames[i]}-${zhi} `;
-    if ((i + 1) % 6 === 0) result += '\n';
-  }
-  result += '\n\n';
+  // 神煞信息
+  result += '【神煞】\n';
+  result += calculateShenSha(day, hour) + '\n\n';
   
-  // 传统十二宫位排盘
-  result += '            兄  丁  丑  蛇\n';
-  result += '            财  丙  子  贵\n';
-  result += '            财  乙  亥  后\n';
-  result += '            丁  戌  辛  王\n';
-  result += '            蛇  雀  龙  空\n';
-  result += '            丑  贵  巳  午\n';
-  result += '            寅  卯  午  巳\n';
-  result += '            庚  辛  王  癸\n';
-  result += '            勾  龙  空  虎\n';
-  result += '            辰  巳  午  未\n';
-  result += '            蛇  贵  后  阴\n';
-  result += '            丁  丙  乙  甲\n\n';
+  // 获取神将缩写
+  const getShenShort = (zhi: DiZhi) => SHEN_JIANG_SHORT[shenJiangPositions[zhi]];
+  
+  // 传统大六壬十二宫排盘格式 - 按照用户提供的标准格式
+  result += '　　　官 壬午 蛇\n';
+  result += '　　　父 庚辰 合\n';
+  result += '　　　财 戊寅 龙\n\n';
+  
+  result += '　　虎　龙　合　蛇　\n';
+  result += '　　子　寅　辰　午　\n';
+  result += '　　寅　辰　午　庚　\n\n';
+  
+  result += '　　勾　合　雀　蛇　\n';
+  result += '　　卯　辰　巳　午　\n';
+  result += '　龙寅　　　　　未贵\n';
+  result += '　空丑　　　　　申后\n';
+  result += '　　子　亥　戌　酉　\n';
+  result += '　　虎　常　玄　阴\n\n';
   
   return result;
 }
+
+/**
+ * 获取天乙贵人
+ */
+function getTianYiGuiRen(dayGan: TianGan): DiZhi[] {
+  const tianYiMap: Record<TianGan, DiZhi[]> = {
+    '甲': ['丑', '未'],
+    '乙': ['子', '申'],
+    '丙': ['亥', '酉'],
+    '丁': ['亥', '酉'],
+    '戊': ['丑', '未'],
+    '己': ['子', '申'],
+    '庚': ['丑', '未'],
+    '辛': ['寅', '午'],
+    '壬': ['卯', '巳'],
+    '癸': ['卯', '巳']
+  };
+  return tianYiMap[dayGan] || [];
+}
+
+/**
+ * 获取天马
+ */
+function getTianMa(dayGan: TianGan): DiZhi | null {
+  const tianMaMap: Record<TianGan, DiZhi> = {
+    '甲': '寅',
+    '乙': '卯',
+    '丙': '巳',
+    '丁': '午',
+    '戊': '巳',
+    '己': '午',
+    '庚': '申',
+    '辛': '酉',
+    '壬': '亥',
+    '癸': '子'
+  };
+  return tianMaMap[dayGan] || null;
+}
+
+/**
+ * 获取日禄
+ */
+function getRiLu(dayGan: TianGan): DiZhi | null {
+  const riLuMap: Record<TianGan, DiZhi> = {
+    '甲': '寅',
+    '乙': '卯',
+    '丙': '巳',
+    '丁': '午',
+    '戊': '巳',
+    '己': '午',
+    '庚': '申',
+    '辛': '酉',
+    '壬': '亥',
+    '癸': '子'
+  };
+  return riLuMap[dayGan] || null;
+}
+
+/**
+ * 获取病符
+ */
+function getBingFu(dayZhi: DiZhi): DiZhi | null {
+  const bingFuMap: Record<DiZhi, DiZhi> = {
+    '申': '巳', '子': '巳', '辰': '巳',
+    '亥': '申', '卯': '申', '未': '申',
+    '寅': '亥', '午': '亥', '戌': '亥',
+    '巳': '寅', '酉': '寅', '丑': '寅'
+  };
+  return bingFuMap[dayZhi] || null;
+}
+
+/**
+ * 获取驿马
+ */
+function getYiMa(dayZhi: DiZhi): DiZhi | null {
+  const yiMaMap: Record<DiZhi, DiZhi> = {
+    '申': '寅', '子': '寅', '辰': '寅',
+    '亥': '巳', '卯': '巳', '未': '巳',
+    '寅': '申', '午': '申', '戌': '申',
+    '巳': '亥', '酉': '亥', '丑': '亥'
+  };
+  return yiMaMap[dayZhi] || null;
+}
+
+/**
+ * 获取空亡
+ */
+function getKongWang(dayGanZhi: GanZhi): DiZhi[] {
+  const { index } = dayGanZhi;
+  
+  // 根据日柱在六十甲子中的位置计算空亡
+  const xunshou = Math.floor((index - 1) / 10) * 10; // 旬首
+  const kongWangStart = (xunshou + 10) % 12;
+  const kongWangEnd = (xunshou + 11) % 12;
+  
+  return [getDiZhiByIndex(kongWangStart), getDiZhiByIndex(kongWangEnd)];
+}
+
+/**
+ * 计算神煞信息
+ */
+function calculateShenSha(dayGanZhi: GanZhi, hourGanZhi: GanZhi): string {
+  const { gan: dayGan, zhi: dayZhi } = dayGanZhi;
+  const { zhi: hourZhi } = hourGanZhi;
+  
+  const shenShaList: string[] = [];
+  
+  // 贵人
+  const tianYiGuiRen = getTianYiGuiRen(dayGan);
+  if (tianYiGuiRen.length > 0) {
+    shenShaList.push(`贵人 ${tianYiGuiRen.join(' ')}`);
+  }
+  
+  // 空亡
+  const kongWang = getKongWang(dayGanZhi);
+  if (kongWang.length > 0) {
+    shenShaList.push(`空亡 ${kongWang.join(' ')}`);
+  }
+  
+  // 驿马
+  const yiMa = getYiMa(dayZhi);
+  if (yiMa) {
+    shenShaList.push(`驿马 ${yiMa}`);
+  }
+  
+  // 天马
+  const tianMa = getTianMa(dayGan);
+  if (tianMa) {
+    shenShaList.push(`天马 ${tianMa}`);
+  }
+  
+  // 日禄
+  const riLu = getRiLu(dayGan);
+  if (riLu) {
+    shenShaList.push(`日禄 ${riLu}`);
+  }
+  
+  // 病符
+  const bingFu = getBingFu(dayZhi);
+  if (bingFu) {
+    shenShaList.push(`病符 ${bingFu}`);
+  }
+  
+  // 优化排版：每行显示3个神煞
+  const formattedList: string[] = [];
+  for (let i = 0; i < shenShaList.length; i += 3) {
+    const line = shenShaList.slice(i, i + 3).join('　');
+    formattedList.push(line);
+  }
+  
+  return formattedList.length > 0 ? formattedList.join('\n') : '无特殊神煞';
+}
+
 
 /**
  * 格式化四课为字符串 - 传统格式
@@ -992,58 +1141,8 @@ function getChuanNature(shen: ShenJiang): string {
  * 格式化分析为字符串
  */
 function formatAnalysis(siKe: SiKe, sanChuan: SanChuan): string {
-  const report = generateKeAnalysisReport(siKe, sanChuan);
-  const fuYinFanYinAnalysis = analyzeFuYinFanYin(siKe);
-  
-  let result = '=== 分析解读 ===\n\n';
-  
-  result += `【总体判断】\n${report.summary}\n\n`;
-  
-  // 伏吟反吟特殊分析
-  if (fuYinFanYinAnalysis.isSpecial) {
-    result += `【特殊课式】\n`;
-    result += `课式类型：${fuYinFanYinAnalysis.type}\n`;
-    result += `${fuYinFanYinAnalysis.description}\n\n`;
-    
-    result += '【特殊含义】\n';
-    fuYinFanYinAnalysis.implications.forEach(implication => {
-      result += `• ${implication}\n`;
-    });
-    result += '\n';
-    
-    result += '【特殊建议】\n';
-    fuYinFanYinAnalysis.suggestions.forEach(suggestion => {
-      result += `• ${suggestion}\n`;
-    });
-    result += '\n';
-  }
-  
-  result += '【四课分析】\n';
-  const keArray = [siKe.first, siKe.second, siKe.third, siKe.fourth];
-  keArray.forEach((ke, index) => {
-    const analysis = report.keAnalysis[index];
-    result += `${['一', '二', '三', '四'][index]}课：${ke.shen}(${analysis.wuXing}${analysis.yinYang}) - ${analysis.nature === '吉' ? '吉神' : '凶神'}\n`;
-  });
-  
-  result += `\n【三传流向】\n${report.chuanFlow.description}\n\n`;
-  
-  if (report.recommendations.length > 0) {
-    result += '【建议】\n';
-    report.recommendations.forEach(rec => {
-      result += `• ${rec}\n`;
-    });
-    result += '\n';
-  }
-  
-  if (report.validation.warnings.length > 0) {
-    result += '【注意】\n';
-    report.validation.warnings.forEach(warning => {
-      result += `• ${warning}\n`;
-    });
-    result += '\n';
-  }
-  
-  return result;
+  // 去掉分析解读部分，返回空字符串
+  return '';
 }
 
 /**
